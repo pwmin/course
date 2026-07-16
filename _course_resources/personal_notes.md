@@ -1,0 +1,89 @@
+# Course Introduction
+- dbt?
+    - Turns queries into prod-ready data transformation workflows.
+    - Similar to git.
+    - Brings version control, documentation, modularity.
+    - Instead of writing one-off SQL scripts, you write modular models.
+    - Handles dependencies and order of runs, and materializes the transformations in your data warehouse.
+- Whoa, dbt Core is open source and database-agnostic (!).
+    - I.e., useful for any modern data warehouse (e.g., Snowflake, BigQuery, Redshift, Databricks).
+- How does it change how data teams work?
+    - No more hundreds of scattered janky SQL scripts and outdated docs! I wish I could've used this last year.
+    - Organized project structure; everything's modular, tested, documented; reporting is included.
+- Main features?
+    - Automated testing.
+        - E.g., non-nulls, referential integrity between tables, custom business logic, unit tests.
+    - Automatic documentation.
+        - Code generates searchable doc with lineage graphs showing exactly how data flows through transformations.
+    - Extensions.
+        - E.g., column-level lineage showing how certain values of a column pass through the pipeline.
+    - Modularity and reusability.
+        - Write logic once, reference it from anywhere; no need to maintain multiple places.
+
+# Building the First Version of Our Project
+- Will act as analytics engineer at Airbnb.
+- Tech stack:
+    - dbt (of course).
+    - Snowflake: Cloud-based data warehouse.
+    - Preset: Managed super set BI tool.
+- Feature requirements:
+    - Modeling changes must be easy to follow and revert (i.e., version-controlled).
+    - Make sure all dependencies (i.e., pipeline steps that feed and depend on each other) are:
+        - Explicit; framework must know the order to execute the steps.
+        - Easy to overview (e.g., in UI).
+    - Make sure pipeline works as expected.
+        - Data quality tests.
+        - Error alerts.
+    - Must manage incremental load in event-based (i.e., "fact") tables.
+        - Don't want to rebuild whole table each time; only want to add new records at the end.
+    - Must manage slowly changing dimensions.
+        - Keep history of changes so we can go back in time.
+    - Last but not least, easy-to-access-and-maintain documentation.
+- Snowflake authentication changes as of Nov 2025:
+    - These won't work well for this course:
+        - Username and password + MFA app.
+            - Doesn't work well for a "service" account, which is a non-human entity accessing Snowflake (e.g., our project).
+        - Personal access token (PAT) (i.e., a random string).
+            - Must set up network policies in Snowflake, which is done more so in enterprise-grade settings.
+        - Single sign-on (SSO).
+            - Integrated with Google Workspace, Office 365 Suite, etc.
+    - We'll use key pair authentication.
+        - This fuels digital signatures and certificates.
+        - Side note: Look up public key infrastructure (PKI) to understand how encryption and communication works.
+        - Consists of:
+            - Private key; never give this to anyone.
+            - Public key; can give to someone if they need it.
+        - These two keys are mathematically interconnected.
+            - If a message is encrypted with the public key, only the private key holder can decrypt it.
+- Snowflake behind the scenes (how the automated setup works):
+    - `COMPUTE_WH` is just boilerplate and the standard compute engine.
+    - Created `AIRBNB` database with two schemas:
+        - `RAW`
+        - `DEV`
+            - This will be our output schema in dbt.
+            - Not actually necessary to create this beforehand, because dbt will create it for us automatically once we specify it as our output schema.
+            - But we want to set up permissions for this schema before we do any work.
+    - We also have the `INFORMATION_SCHEMA` and `PUBLIC` schemas, which are defaults in Snowflake.
+    - Used the `ACCOUNTADMIN` role, which means we want to act as a supser user to set up all the users and permissions.
+    - Created the `TRANSFORM` role which will be used by dbt.
+    - Snowflake is very much role-based and role-heavy...
+        - So it's better to work with roles and create a user and assign a role to it...
+        - Instead of working with users and assigning permissions to a user in spite of role.
+        - Hmm, reminds me of app access management.
+    - Granted the `TRANSFORM` role to use the default warehouse (`COMPUTE_WH`).
+    - Created `dbt` user.
+        - Login name: 'dbt'
+        - Type is `SERVICE`, meaning it's not a human user (see note above on "service" account).
+        - And granted default role, warehouse, and namespace.
+    - There are intentional redundancies in the setup script in order to be extra permissive (take a variety of students into account).
+    - Granted `ALL` permissions to the `TRANSFORM` role (i.e., it should be able to do everything on the `AIRBNB` db).
+    - Created new role and user to be used in Preset later.
+        - Role: `REPORTER`
+        - User: `PRESET`
+    - Instead of `ALL`, granted `USAGE` on database and schemas, and `SELECT` on tables, to the `REPORTER` role.
+        - Makes sense, since this is for a BI tool (i.e., separation of concerns).
+    - dbt profiles YAML:
+        - `outputs`
+            - Each one is basically a connection.
+            - The `dev` connection is for Snowflake, connected to an account (mine), connected to the `dbt` user.
+            - And specifies role, db, schema, warehouse, etc.
