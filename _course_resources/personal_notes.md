@@ -87,3 +87,18 @@
             - Each one is basically a connection.
             - The `dev` connection is for Snowflake, connected to an account (mine), connected to the `dbt` user.
             - And specifies role, db, schema, warehouse, etc.
+- Why did we specify `--skip-profile-setup` when running `dbt init`?
+    - By default, dbt tries to set up your profile file in your home folder, not in your project folder.
+    - In earlier dbt versions, the default location for the profiles folder was a folder called '.dbt' inside the home folder.
+        - This has changed with recent dbt versions, and now the default profiles folder is just the project folder.
+    - We should not store our connection details (or other sensitive info) on Git!
+    - Your connection might be different depending on whether you're on your own laptop or a you're on a prod server.
+        - If you're working with prod dbt apps, suggestion: Copy 'profiles.yml' to your project folder automatically through a CI/CD pipeline and exclude it from Git.
+- More on 'profiles.yml' (also see behind-the-scenes notes above):
+    - dbt can have multiple targets.
+    - Right now we've specified only the `dev` connection, and a single default target called `dev`.
+    - The private key has a passphrase, which is optional.
+        - But the BI tool we'll use later will require a private key, which is protected by a passphrase.
+    - We'll generate tables in the `DEV` schema.
+    - Why 1 thread? Just for simplicity for now; we instruct dbt to work on only one model at a time so we don't run into parallel execution problems.
+- Heads up: Some older course videos might use the folder name 'dbtlearn' (which is now trademarked by dbt Labs) instead of 'airbnb'; doesn't matter.
