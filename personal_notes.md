@@ -1,4 +1,4 @@
-# Course Introduction
+# Section 1: Course Introduction
 - dbt?
     - Turns queries into prod-ready data transformation workflows.
     - Similar to git.
@@ -20,7 +20,7 @@
     - Modularity and reusability.
         - Write logic once, reference it from anywhere; no need to maintain multiple places.
 
-# Building the First Version of Our Project
+# Section 2: Building the First Version of Our Project
 - Will act as analytics engineer at Airbnb.
 - Tech stack:
     - dbt (of course).
@@ -34,7 +34,7 @@
     - Make sure pipeline works as expected.
         - Data quality tests.
         - Error alerts.
-    - Must manage incremental load in event-based (i.e., "fact") tables.
+    - Must manage incremental load in event-based (i.e., "fact" or "fct") tables.
         - Don't want to rebuild whole table each time; only want to add new records at the end.
     - Must manage slowly changing dimensions.
         - Keep history of changes so we can go back in time.
@@ -102,3 +102,18 @@
     - We'll generate tables in the `DEV` schema.
     - Why 1 thread? Just for simplicity for now; we instruct dbt to work on only one model at a time so we don't run into parallel execution problems.
 - Heads up: Some older course videos might use the folder name 'dbtlearn' (which is now trademarked by dbt Labs) instead of 'airbnb'; doesn't matter.
+- Datasets and data flow overview:
+    - Input data model consists of 4 tables.
+        - 3 are directly connected to Airbnb: listings, reviews, hosts.
+            - reviews
+                - Are connected to listings via `listing_id` (int).
+            - hosts
+                - Are connected to listings via `host_id` (int).
+                - Superhosts are hosts who have very high reviews and are very active in responding to requests.
+        - 1 is an external table we'll upload: `full_moon_dates`.
+            - We'll see how these affect reviews (lol).
+    - Will...
+        - Import input tables -> make minor modifications in first layer (src) -> clean these to make dim and fct tables -> cont'd.
+        - Send external table (full moon) to Snowflake from dbt.
+        - Make mart tables to be used in dashboard.
+        - Implement tests.
