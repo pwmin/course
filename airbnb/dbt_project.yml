@@ -6,21 +6,23 @@ name: 'airbnb'
 version: '1.0.0'
 
 # This setting configures which "profile" dbt uses for this project.
+# Defined in profiles.yml.
 profile: 'airbnb'
 
 # These configurations specify where dbt should look for different types of files.
 # The `model-paths` config, for example, states that models in this project can be
 # found in the "models/" directory. You probably won't need to change these!
-model-paths: ["models"]
-analysis-paths: ["analyses"]
+# These are all arrays, meaning each can contain multiple paths.
+model-paths: ["models"]  # Tables, views, and everything you're building.
+analysis-paths: ["analyses"]  # SQLs you want to execute manually.
 test-paths: ["tests"]
-seed-paths: ["seeds"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
+seed-paths: ["seeds"]  # Local data (e.g., CSVs) you want to push to your warehouse.
+macro-paths: ["macros"]  # Small reusable snippets.
+snapshot-paths: ["snapshots"]  # SCD type 2 dim tables.
 
 clean-targets:         # directories to be removed by `dbt clean`
-  - "target"
-  - "dbt_packages"
+  - "target"  # Created anytime you run dbt.
+  - "dbt_packages"  # Created when installing packages.
 
 
 # Configuring models
@@ -31,6 +33,3 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   airbnb:
-    # Config indicated by + and applies to all files under models/example/
-    example:
-      +materialized: view
